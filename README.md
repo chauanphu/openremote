@@ -49,6 +49,14 @@ CMD:
 cmd /C "set OR_HOSTNAME=192.168.1.1 && docker-compose -p openremote up -d"
 ```
 
+## Change Languages
+1. Adding vi: "vietnamese" to the DEFAULT_LANGUAGES list in `ui/component/core/src/index.ts`
+2. Creating a new folder under `/ui/app/shared/locales` called `vi`
+3. Copy pasted the Ukrainian file (`/uk/or.json`) into the new `/vi` directory. (for testing)
+4. Ran `./gradlew clean installDist`
+5. Run the Java runtime of the local OR manager instance using my IDE.
+6. Open the terminal, navigate to `ui/app/manager` and execute npm run serve
+
 ## What next
 Try creating assets, agents, rules, users, realms, etc. using the Manager UI, please refer to the [documentation](https://docs.openremote.io) for more information, some things to try:
 
