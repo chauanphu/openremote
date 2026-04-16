@@ -501,11 +501,12 @@ services:
 
   # Map tile server
   tileserver:
-    image: openremote/tileserver:${TILESERVER_VERSION:-latest}
+    image: maptiler/tileserver-gl:latest
     restart: always
-    #ports:
-    #  - "8082:80" # Web server port
-
+    volumes:
+      # Use deployment-data, which contains the /map directory
+      - deployment-data:/data:ro
+    command: ["--mbtiles", "/data/map/mapdata.mbtiles"]
 
   sish:
     image: antoniomika/sish:latest

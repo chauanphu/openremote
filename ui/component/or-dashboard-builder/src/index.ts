@@ -34,6 +34,7 @@ import {AttributeInputWidget} from "./widgets/attribute-input-widget";
 import {TableWidget} from "./widgets/table-widget";
 import {GatewayWidget} from "./widgets/gateway-widget";
 import {BarChartWidget} from "./widgets/barchart-widget";
+import {StreetlightWidget} from "./widgets/streetlight-widget";
 
 // language=CSS
 const styling = css`
@@ -222,6 +223,7 @@ export function registerWidgetTypes() {
     widgetTypes.set("linechart", ChartWidget.getManifest());
     widgetTypes.set("map", MapWidget.getManifest());
     widgetTypes.set("table", TableWidget.getManifest());
+    widgetTypes.set("streetlight", StreetlightWidget.getManifest());
 }
 
 @customElement("or-dashboard-builder")

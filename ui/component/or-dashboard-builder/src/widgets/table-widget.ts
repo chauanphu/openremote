@@ -1,14 +1,14 @@
-import {css, html, PropertyValues, TemplateResult } from "lit";
+import { css, html, PropertyValues, TemplateResult } from "lit";
 import { customElement } from "lit/decorators.js";
-import {OrAssetWidget} from "../util/or-asset-widget";
-import {WidgetManifest} from "../util/or-widget";
-import {WidgetConfig} from "../util/widget-config";
-import {WidgetSettings} from "../util/widget-settings";
-import {TableSettings} from "../settings/table-settings";
-import {OrMwcTableRowClickEvent, TableColumn, TableRow, TableConfig} from "@openremote/or-mwc-components/or-mwc-table";
-import {i18next} from "@openremote/or-translate";
-import {Util} from "@openremote/core";
-import {Asset, AssetModelUtil} from "@openremote/model";
+import { OrAssetWidget } from "../util/or-asset-widget";
+import { WidgetManifest } from "../util/or-widget";
+import { WidgetConfig } from "../util/widget-config";
+import { WidgetSettings } from "../util/widget-settings";
+import { TableSettings } from "../settings/table-settings";
+import { OrMwcTableRowClickEvent, TableColumn, TableRow, TableConfig } from "@openremote/or-mwc-components/or-mwc-table";
+import { i18next } from "@openremote/or-translate";
+import { Util } from "@openremote/core";
+import { Asset, AssetModelUtil } from "@openremote/model";
 import "@openremote/or-mwc-components/or-mwc-table";
 
 export interface TableWidgetConfig extends WidgetConfig {
@@ -71,7 +71,7 @@ export class TableWidget extends OrAssetWidget {
 
     // Lit Lifecycle
     protected willUpdate(changedProps: PropertyValues) {
-        if(changedProps.has('widgetConfig') && this.widgetConfig) {
+        if (changedProps.has('widgetConfig') && this.widgetConfig) {
             this.loadAssets();
         }
 
@@ -82,7 +82,7 @@ export class TableWidget extends OrAssetWidget {
     /* --------------------------------------- */
 
     protected loadAssets() {
-        if(this.widgetConfig.allOfType) {
+        if (this.widgetConfig.allOfType) {
             this.queryAssets({
                 types: [this.widgetConfig.assetType!],
                 select: {
@@ -90,17 +90,17 @@ export class TableWidget extends OrAssetWidget {
                 }
             }).then((assets) => {
                 this.loadedAssets = assets;
-                })
-        } else if(this.widgetConfig.assetIds.find(id => !this.isAssetLoaded(id))) {
-               this.queryAssets({
-                   ids: this.widgetConfig.assetIds,
-                   select: {
-                       attributes: this.widgetConfig.attributeNames
-                   }
-               }).then((assets) => {
-                   this.loadedAssets = assets;
-               })
-            }
+            })
+        } else if (this.widgetConfig.assetIds.find(id => !this.isAssetLoaded(id))) {
+            this.queryAssets({
+                ids: this.widgetConfig.assetIds,
+                select: {
+                    attributes: this.widgetConfig.attributeNames
+                }
+            }).then((assets) => {
+                this.loadedAssets = assets;
+            })
+        }
     }
 
     protected getColumns(attributeNames: string[]): TableColumn[] {
@@ -108,7 +108,7 @@ export class TableWidget extends OrAssetWidget {
         const attrColumns = attributeNames.map(attrName => {
             let text = attrName;
             let numeric = false;
-            if(this.widgetConfig.assetType && referenceAsset && referenceAsset.attributes && referenceAsset.attributes[attrName]) {
+            if (this.widgetConfig.assetType && referenceAsset && referenceAsset.attributes && referenceAsset.attributes[attrName]) {
                 const attributeDescriptor = AssetModelUtil.getAttributeDescriptor(attrName, this.widgetConfig.assetType);
                 text = Util.getAttributeLabel(referenceAsset.attributes[attrName], attributeDescriptor, this.widgetConfig.assetType, true);
                 numeric = attributeDescriptor?.format?.asNumber || attributeDescriptor?.format?.asSlider || false;
@@ -125,7 +125,7 @@ export class TableWidget extends OrAssetWidget {
     protected getRows(attributeNames: string[]): TableRow[] {
         return this.loadedAssets.map(asset => {
             const attrEntries = attributeNames.map(attrName => {
-                if(asset.attributes && asset.attributes[attrName]) {
+                if (asset.attributes && asset.attributes[attrName]) {
                     const attributeDescriptor = AssetModelUtil.getAttributeDescriptor(attrName, asset.type!);
                     const strValue = Util.getAttributeValueAsString(asset.attributes[attrName], attributeDescriptor, asset.type, false);
                     const numValue = Number(strValue);

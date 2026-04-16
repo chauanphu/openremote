@@ -18,6 +18,10 @@ import static org.openremote.model.Constants.UNITS_HOUR;
 @Entity
 public class StreetLightAsset extends Asset<ThingAsset> {
 
+    public static final AttributeDescriptor<Boolean> TOGGLE = new AttributeDescriptor<>("toggle", ValueType.BOOLEAN)
+            .withFormat(ValueFormat.BOOLEAN_ON_OFF());
+    public static final AttributeDescriptor<Boolean> AUTO = new AttributeDescriptor<>("auto", ValueType.BOOLEAN)
+            .withFormat(ValueFormat.BOOLEAN_ON_OFF());
     public static final AttributeDescriptor<Double> POWER = new AttributeDescriptor<>("power", ValueType.NUMBER)
             .withUnits(UNITS_WATT);
     public static final AttributeDescriptor<Double> VOLTAGE = new AttributeDescriptor<>("voltage", ValueType.NUMBER)
@@ -28,14 +32,12 @@ public class StreetLightAsset extends Asset<ThingAsset> {
             "totalEnergyConsumption", ValueType.NUMBER).withUnits(UNITS_KILO, UNITS_WATT, UNITS_HOUR); // kWh is
                                                                                                        // somewhat
                                                                                                        // standard
-    public static final AttributeDescriptor<Boolean> TOGGLE = new AttributeDescriptor<>("toggle", ValueType.BOOLEAN)
-            .withFormat(ValueFormat.BOOLEAN_ON_OFF());
     public static final AttributeDescriptor<Date> ON_TIME = new AttributeDescriptor<>("onTime",
             ValueType.DATE_AND_TIME);
     public static final AttributeDescriptor<Date> OFF_TIME = new AttributeDescriptor<>("offTime",
             ValueType.DATE_AND_TIME);
 
-    public static final AssetDescriptor<StreetLightAsset> DESCRIPTOR = new AssetDescriptor<>("lightbulb", "e6688a",
+    public static final AssetDescriptor<StreetLightAsset> DESCRIPTOR = new AssetDescriptor<>("post-lamp", "e6688a",
             StreetLightAsset.class);
 
     /**
@@ -81,6 +83,15 @@ public class StreetLightAsset extends Asset<ThingAsset> {
 
     public StreetLightAsset setTotalEnergyConsumption(Double value) {
         getAttributes().getOrCreate(TOTAL_ENERGY_CONSUMPTION).setValue(value);
+        return this;
+    }
+
+    public Optional<Boolean> getAuto() {
+        return getAttributes().getValue(AUTO);
+    }
+
+    public StreetLightAsset setAuto(Boolean value) {
+        getAttributes().getOrCreate(AUTO).setValue(value);
         return this;
     }
 

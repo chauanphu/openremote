@@ -292,6 +292,7 @@
   "romanian": "Tiếng Romania",
   "spanish": "Tiếng Tây Ban Nha",
   "ukrainian": "Tiếng Ukraina",
+  "vietnamese": "Tiếng Việt",
   "noRuleSelected": "Vui lòng chọn một luật ở bên trái",
   "anyOfThisType": "Bất kỳ loại này",
   "notification": "Thông báo",
@@ -599,7 +600,8 @@
   "label": {
     "asset": {
       "ElectricityProducerSolarAsset": "Tài sản năng lượng mặt trời PV",
-      "ElectricityProducerWindAsset": "Tài sản tuabin gió"
+      "ElectricityProducerWindAsset": "Tài sản tuabin gió",
+      "StreetLightAsset": "Đèn đường"
     },
     "meta": {},
     "attribute": {},

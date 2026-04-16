@@ -1,9 +1,9 @@
 import "url-search-params-polyfill";
-import {Console} from "./console";
+import { Console } from "./console";
 import rest from "@openremote/rest";
-import {InternalAxiosRequestConfig} from "axios";
-import {EventProvider, EventProviderFactory, EventProviderStatus, WebSocketEventProvider} from "./event";
-import i18next, {InitOptions} from "i18next";
+import { InternalAxiosRequestConfig } from "axios";
+import { EventProvider, EventProviderFactory, EventProviderStatus, WebSocketEventProvider } from "./event";
+import i18next, { InitOptions } from "i18next";
 import i18nextBackend from "i18next-http-backend";
 import moment from "moment";
 import {
@@ -16,11 +16,11 @@ import {
     UsernamePassword
 } from "@openremote/model";
 import * as Util from "./util";
-import {createMdiIconSet, createSvgIconSet, IconSets, OrIconSet} from "@openremote/or-icon";
+import { createMdiIconSet, createSvgIconSet, IconSets, OrIconSet } from "@openremote/or-icon";
 import Keycloak from 'keycloak-js';
 
 // Re-exports
-export {Util};
+export { Util };
 export * from "./asset-mixin";
 export * from "./console";
 export * from "./event";
@@ -83,8 +83,8 @@ export const DEFAULT_LANGUAGES: Languages = {
     pt: "portuguese",
     ro: "romanian",
     es: "spanish",
+    vi: "vietnamese",
     uk: "ukrainian",
-    vi: "vietnamese"
 };
 
 export function normaliseConfig(config: ManagerConfig): ManagerConfig {
@@ -244,7 +244,7 @@ export class Manager implements EventProviderFactory {
         if (lang) {
             i18next.changeLanguage(lang);
             this.console.storeData("LANGUAGE", lang);
-            if(this.authenticated) {
+            if (this.authenticated) {
                 this.updateKeycloakUserLanguage(lang).catch(e => console.error(e));
             }
         }
@@ -402,7 +402,7 @@ export class Manager implements EventProviderFactory {
 
         // Don't let console registration error prevent loading
         const consoleSuccess = await this.doConsoleInit();
-        if(consoleSuccess) {
+        if (consoleSuccess) {
             // Send the console a message to clear the web history, so no pages outside the app can be accessed.
             // For example, this prevents navigating back to an authentication screen.
             this._clearWebHistory();
@@ -607,7 +607,7 @@ export class Manager implements EventProviderFactory {
 
     // Function that connects the EventProvider.
     protected _connectEvents() {
-        if(this.events?.status === EventProviderStatus.DISCONNECTED) {
+        if (this.events?.status === EventProviderStatus.DISCONNECTED) {
             this.events!.connect().catch((e) => {
                 console.error(`Failed to connect EventProvider.`);
                 console.error(e);
@@ -677,13 +677,13 @@ export class Manager implements EventProviderFactory {
      */
     public async getUserPreferredLanguage(keycloak = this._keycloak): Promise<string | undefined> {
 
-        if(keycloak && keycloak.authenticated) {
+        if (keycloak && keycloak.authenticated) {
             const profile: Keycloak.KeycloakProfile | undefined = keycloak?.profile || await keycloak?.loadUserProfile();
-            if(profile?.attributes) {
+            if (profile?.attributes) {
                 const attributes = new Map(Object.entries(profile.attributes));
-                if(attributes.has("locale")) {
+                if (attributes.has("locale")) {
                     const attr = attributes.get("locale") as any[];
-                    if(typeof attr[0] === "string") {
+                    if (typeof attr[0] === "string") {
                         return attr[0];
                     }
                 }
@@ -695,11 +695,11 @@ export class Manager implements EventProviderFactory {
     }
 
     protected async updateKeycloakUserLanguage(lang: string, rest = this.rest): Promise<void> {
-        if(!this.authenticated) {
+        if (!this.authenticated) {
             console.warn("Tried updating user language, but the user is not authenticated.");
             return;
         }
-        if(!rest) {
+        if (!rest) {
             console.warn("Tried updating user language, but the REST API is not initialized yet.");
             return;
         }
@@ -720,7 +720,7 @@ export class Manager implements EventProviderFactory {
                 window.clearTimeout(this._keycloakUpdateTokenInterval);
                 this._keycloakUpdateTokenInterval = undefined;
             }
-            this._keycloak.logout(redirectUrl && redirectUrl !== "" ? {redirectUri: redirectUrl} : undefined);
+            this._keycloak.logout(redirectUrl && redirectUrl !== "" ? { redirectUri: redirectUrl } : undefined);
         } else if (this._basicIdentity) {
             this._basicIdentity = undefined;
             if (redirectUrl) {
@@ -745,7 +745,7 @@ export class Manager implements EventProviderFactory {
                     if (options && options.redirectUrl && options.redirectUrl !== "") {
                         keycloakOptions.redirectUri = options.redirectUrl;
                     }
-                    if(options?.action && options.action !== "") {
+                    if (options?.action && options.action !== "") {
                         keycloakOptions.action = options.action;
                     }
                     if (this.isMobile()) {
@@ -891,7 +891,7 @@ export class Manager implements EventProviderFactory {
      */
     public async retrieveAuthorizationHeader(): Promise<string | undefined> {
         const keycloakToken = await this.retrieveKeycloakToken();
-        if(keycloakToken) {
+        if (keycloakToken) {
             return "Bearer " + keycloakToken;
         } else {
             return "Basic " + this.getBasicToken();
@@ -1037,7 +1037,7 @@ export class Manager implements EventProviderFactory {
 
     /** Function that clears the `WebView` history of a console. It will not delete the history on regular browsers. */
     protected _clearWebHistory(): void {
-        if(this.isMobile()) {
+        if (this.isMobile()) {
             this.console?._doSendGenericMessage("CLEAR_WEB_HISTORY", undefined);
         }
     }
@@ -1107,7 +1107,7 @@ export class Manager implements EventProviderFactory {
                 // Try and use offline token if it is available
                 const offlineToken = await this._getNativeOfflineRefreshToken();
                 this._keycloak!.refreshToken = offlineToken;
-                if(!offlineToken) {
+                if (!offlineToken) {
                     console.warn("No offline token was found on this device.");
                 }
 
@@ -1122,7 +1122,7 @@ export class Manager implements EventProviderFactory {
 
             // Check events
             const isEventsOnline = () => this.events?.status === EventProviderStatus.CONNECTED;
-            if(!isEventsOnline()) {
+            if (!isEventsOnline()) {
                 console.debug("Event provider offline, attempting to reconnect using latest auth token.");
                 await this.events?.connect();
             }
@@ -1163,7 +1163,7 @@ export class Manager implements EventProviderFactory {
             // but this is handled by the catch block
             // @ts-ignore
             const tokenUrl = this._keycloak.endpoints.token();
-            const result = await fetch(tokenUrl, {method: "OPTIONS", signal: controller.signal});
+            const result = await fetch(tokenUrl, { method: "OPTIONS", signal: controller.signal });
             return result.status === 200;
         } catch (e) {
             return false;

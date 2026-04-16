@@ -8,7 +8,6 @@ volumes:
   manager-data:
 
 services:
-
   keycloak:
     extends:
       file: deploy.yml
@@ -27,7 +26,6 @@ services:
       KC_HOSTNAME_PORT: ${KC_HOSTNAME_PORT:-8080}
       # Prevent theme caching during dev
       KEYCLOAK_START_OPTS: --spi-theme-static-max-age=-1 --spi-theme-cache-themes=false --spi-theme-cache-templates=false
-
   postgresql:
     extends:
       file: deploy.yml
@@ -38,6 +36,14 @@ services:
     # Access directly if needed on localhost
     ports:
       - "5432:5432"
+# New TileServer-GL Service
+  tileserver:
+    image: maptiler/tileserver-gl:latest
+    restart: always
+    volumes:
+      # Map your local map directory to the container
+      - ../deployment/map:/data:ro
+    command: ["--mbtiles", "/data/mapdata.mbtiles"]
 
   manager:
     extends:
@@ -50,10 +56,19 @@ services:
     depends_on:
       postgresql:
         condition: service_healthy
+      tileserver: # Ensure manager waits for tileserver
+        condition: service_started
     volumes:
       - manager-data:/storage
     environment:
       OR_SETUP_RUN_ON_RESTART: ${OR_SETUP_RUN_ON_RESTART:-true}
       OR_DEV_MODE: ${OR_DEV_MODE:-true}
+      OR_HOSTNAME: localhost
+      # Set the tileserver host name (matches the service name above)
+      OR_MAP_TILESERVER_HOST: tileserver
+      # Update port to 8080 (the default for maptiler/tileserver-gl)
+      OR_MAP_TILESERVER_PORT: 8080
+      OR_MAP_TILESERVER_REQUEST_TIMEOUT: ${OR_MAP_TILESERVER_REQUEST_TIMEOUT:-10000}
+      OR_MAP_TILES_PATH: ${OR_MAP_TILES_PATH:-/deployment/map/mapdata.mbtiles}
     ports:
       - "8080:8080"
