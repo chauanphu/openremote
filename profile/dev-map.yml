@@ -5,13 +5,12 @@
 # Please see deploy.yml for configuration details for each service.
 #
 services:
-
   map:
     extends:
       file: deploy.yml
       service: tileserver
     ports:
-      - "8082:80"
+      - "8082:8080"
     volumes:
       - ${DEPLOYMENT_DIRECTORY:-../deployment}:/deployment
-      - ${DEPLOYMENT_DIRECTORY:-../deployment}/map:/data
+      - ${DEPLOYMENT_DIRECTORY:-../deployment}/map:/data/map

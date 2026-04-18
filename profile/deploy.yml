@@ -505,7 +505,7 @@ services:
     restart: always
     volumes:
       # Use deployment-data, which contains the /map directory
-      - deployment-data:/data:ro
+      # - deployment-data:/data:ro
     command: ["--mbtiles", "/data/map/mapdata.mbtiles"]
 
   sish:
