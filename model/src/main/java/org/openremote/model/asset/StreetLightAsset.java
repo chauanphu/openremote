@@ -20,21 +20,33 @@ import static org.openremote.model.Constants.UNITS_HOUR;
 @Entity
 public class StreetLightAsset extends Asset<ThingAsset> {
 
-    public static final AttributeDescriptor<Boolean> TOGGLE = new AttributeDescriptor<>("toggle", ValueType.BOOLEAN)
+    public static final AttributeDescriptor<Boolean> TOGGLE = new AttributeDescriptor<>("toggle", ValueType.BOOLEAN,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE))
             .withFormat(ValueFormat.BOOLEAN_ON_OFF());
-    public static final AttributeDescriptor<Boolean> AUTO = new AttributeDescriptor<>("auto", ValueType.BOOLEAN)
-            .withFormat(ValueFormat.BOOLEAN_ON_OFF());
+    public static final AttributeDescriptor<Boolean> AUTO = new AttributeDescriptor<>("auto", ValueType.BOOLEAN,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE)).withFormat(ValueFormat.BOOLEAN_ON_OFF());
     public static final AttributeDescriptor<Double> POWER = new AttributeDescriptor<>("power", ValueType.NUMBER,
-            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ, true),
-            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE, true)).withUnits(UNITS_WATT);
-    public static final AttributeDescriptor<Double> VOLTAGE = new AttributeDescriptor<>("voltage", ValueType.NUMBER)
-            .withUnits(UNITS_VOLT);
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE),
+            new MetaItem<>(MetaItemType.READ_ONLY)).withUnits(UNITS_WATT);
+    public static final AttributeDescriptor<Double> VOLTAGE = new AttributeDescriptor<>("voltage", ValueType.NUMBER,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE),
+            new MetaItem<>(MetaItemType.READ_ONLY)).withUnits(UNITS_VOLT);
     public static final AttributeDescriptor<Double> WORKING_CURRENT = new AttributeDescriptor<>("workingCurrent",
-            ValueType.NUMBER).withUnits("A");
+            ValueType.NUMBER,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE),
+            new MetaItem<>(MetaItemType.READ_ONLY)).withUnits("A");
     public static final AttributeDescriptor<Double> TOTAL_ENERGY_CONSUMPTION = new AttributeDescriptor<>(
-            "totalEnergyConsumption", ValueType.NUMBER).withUnits(UNITS_KILO, UNITS_WATT, UNITS_HOUR); // kWh is
-                                                                                                       // somewhat
-                                                                                                       // standard
+            "totalEnergyConsumption", ValueType.NUMBER,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE),
+            new MetaItem<>(MetaItemType.READ_ONLY)).withUnits(UNITS_KILO, UNITS_WATT, UNITS_HOUR); // kWh is
+                                                                                                   // somewhat
+                                                                                                   // standard
     public static final AttributeDescriptor<Date> ON_TIME = new AttributeDescriptor<>("onTime",
             ValueType.DATE_AND_TIME);
     public static final AttributeDescriptor<Date> OFF_TIME = new AttributeDescriptor<>("offTime",
