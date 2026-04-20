@@ -58,18 +58,19 @@ cmd /C "set OR_HOSTNAME=192.168.1.1 && docker-compose -p openremote up -d"
 6. Open the terminal, navigate to `ui/app/manager` and execute npm run serve
 
 ## Add and connect devices
+
 1. Create an Asset with type "Đèn đường".
 2. Create a Restricted user and link to the asset/device.
 3. Ensure the required attributes of the assets has sufficient permission (allow restricted user to read/write)
 4. Connection info:
- - username: {realm:username}. For example: master:device-1
- - password: copy when create the user
- - host: localhost (dev mode)
- - port: 1883 or 8443
- - protocol: MQTT
- - client-id: self-choice
- - Subscribe to topic: {master/{client-id}/attribute/{subscribed attribute}/{asset id}}
- - Write to the topic: {master/{client-id}/writeattributevalue/{published attribute}/{asset id}}
+    - username: {realm:username}. For example: master:device-1
+    - password: copy when create the user
+    - host: localhost (dev mode)
+    - port: 1883 or 8443
+    - protocol: MQTT
+    - client-id: self-choice
+    - Subscribe to topic: {master/{client-id}/attribute/{subscribed attribute}/{asset id}}
+     - Write to the topic: {master/{client-id}/writeattributevalue/{published attribute}/{asset id}}
 
 ## What next
 Try creating assets, agents, rules, users, realms, etc. using the Manager UI, please refer to the [documentation](https://docs.openremote.io) for more information, some things to try:

@@ -2,7 +2,9 @@ package org.openremote.model.asset.impl;
 
 import org.openremote.model.asset.Asset;
 import org.openremote.model.asset.AssetDescriptor;
+import org.openremote.model.attribute.MetaItem;
 import org.openremote.model.value.AttributeDescriptor;
+import org.openremote.model.value.MetaItemType;
 import org.openremote.model.value.ValueFormat;
 import org.openremote.model.value.ValueType;
 
@@ -22,8 +24,9 @@ public class StreetLightAsset extends Asset<ThingAsset> {
             .withFormat(ValueFormat.BOOLEAN_ON_OFF());
     public static final AttributeDescriptor<Boolean> AUTO = new AttributeDescriptor<>("auto", ValueType.BOOLEAN)
             .withFormat(ValueFormat.BOOLEAN_ON_OFF());
-    public static final AttributeDescriptor<Double> POWER = new AttributeDescriptor<>("power", ValueType.NUMBER)
-            .withUnits(UNITS_WATT);
+    public static final AttributeDescriptor<Double> POWER = new AttributeDescriptor<>("power", ValueType.NUMBER,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ, true),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE, true)).withUnits(UNITS_WATT);
     public static final AttributeDescriptor<Double> VOLTAGE = new AttributeDescriptor<>("voltage", ValueType.NUMBER)
             .withUnits(UNITS_VOLT);
     public static final AttributeDescriptor<Double> WORKING_CURRENT = new AttributeDescriptor<>("workingCurrent",

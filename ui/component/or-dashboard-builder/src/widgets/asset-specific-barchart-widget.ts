@@ -1,15 +1,15 @@
-import {AssetDatapointIntervalQuery, AssetDatapointQueryUnion, Asset, AttributeRef, Attribute} from "@openremote/model";
-import {html, PropertyValues, TemplateResult} from "lit";
-import {when} from "lit/directives/when.js";
+import { AssetDatapointIntervalQuery, AssetDatapointQueryUnion, Asset, AttributeRef, Attribute } from "@openremote/model";
+import { html, PropertyValues, TemplateResult } from "lit";
+import { when } from "lit/directives/when.js";
 import moment from "moment";
-import {OrAssetWidget} from "../util/or-asset-widget";
-import {customElement, state} from "lit/decorators.js";
-import {AssetWidgetConfig} from "../util/widget-config";
-import {OrWidget, WidgetManifest} from "../util/or-widget";
-import {AssetSpecificBarChartSettings} from "../settings/asset-specific-barchart-settings";
-import {WidgetSettings} from "../util/widget-settings";
+import { OrAssetWidget } from "../util/or-asset-widget";
+import { customElement, state } from "lit/decorators.js";
+import { AssetWidgetConfig } from "../util/widget-config";
+import { OrWidget, WidgetManifest } from "../util/or-widget";
+import { AssetSpecificBarChartSettings } from "../settings/asset-specific-barchart-settings";
+import { WidgetSettings } from "../util/widget-settings";
 import "@openremote/or-attribute-barchart";
-import {BarChartAttributeConfig, BarChartInterval, OrAttributeBarChart} from "@openremote/or-attribute-barchart";
+import { BarChartAttributeConfig, BarChartInterval, OrAttributeBarChart } from "@openremote/or-attribute-barchart";
 
 export interface AssetSpecificBarChartWidgetConfig extends AssetWidgetConfig {
     assetType?: string;
@@ -121,7 +121,7 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
     }
 
     public refreshContent(force: boolean) {
-        if(!force) {
+        if (!force) {
             const datapointQuery = structuredClone(this.widgetConfig.datapointQuery);
             datapointQuery.fromTimestamp = undefined;
             datapointQuery.toTimestamp = undefined;
@@ -133,14 +133,14 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
     }
 
     protected willUpdate(changedProps: PropertyValues) {
-        if(!this.widgetConfig.datapointQuery) {
+        if (!this.widgetConfig.datapointQuery) {
             this.widgetConfig.datapointQuery = this.getDefaultQuery();
-            if(!changedProps.has("widgetConfig")) {
+            if (!changedProps.has("widgetConfig")) {
                 changedProps.set("widgetConfig", this.widgetConfig);
             }
         }
 
-        if(changedProps.has("widgetConfig") && this.widgetConfig) {
+        if (changedProps.has("widgetConfig") && this.widgetConfig) {
             this.datapointQuery = this.widgetConfig.datapointQuery;
             if (this._activeAssetId) {
                 this._loadActiveAsset();
@@ -156,13 +156,13 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
             this.assetAttributes = [];
             return;
         }
-        
+
         this._loading = true;
         this._error = undefined;
-        
+
         this.fetchActiveAssets([this._activeAssetId], this.widgetConfig.attributeNames).then(assets => {
             this.loadedAssets = assets;
-            
+
             this.assetAttributes = [];
             if (assets && assets.length > 0) {
                 const asset = assets[0];
@@ -170,7 +170,7 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
                     this._error = "Selected asset does not match the configured asset type.";
                     return;
                 }
-                
+
                 this.widgetConfig.attributeNames.forEach(attrName => {
                     const attribute = asset.attributes ? asset.attributes[attrName] : undefined;
                     if (attribute) {
@@ -213,27 +213,31 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
                     <span><or-translate .value="${this._error}"></or-translate></span>
                 </div>
             `, () => {
-                if (this.loadedAssets.length === 0 || this.assetAttributes.length === 0) {
-                     return html`
+            if (this.loadedAssets.length === 0 || this.assetAttributes.length === 0) {
+                return html`
                          <div style="height: 100%; display: flex; justify-content: center; align-items: center; text-align: center;">
                              <span style="color: var(--mdc-theme-text-secondary-on-background, rgba(0,0,0,0.54)); font-style: italic;">
                                  No data available for the selected asset attributes.
                              </span>
                          </div>
                      `;
-                }
+            }
 
-                let attributeColors: [AttributeRef, string][] = [];
-                if (this.loadedAssets[0]) {
-                    const asset = this.loadedAssets[0];
-                    this.widgetConfig.attributeNames.forEach((name, idx) => {
-                        attributeColors.push([{id: asset.id, name: name}, OrAttributeBarChart.DEFAULT_COLORS[idx % OrAttributeBarChart.DEFAULT_COLORS.length] || "#000000"]);
-                    });
-                }
-                
-                let attributeSettings: BarChartAttributeConfig = {};
+            let attributeColors: [AttributeRef, string][] = [];
+            if (this.loadedAssets[0]) {
+                const asset = this.loadedAssets[0];
+                this.widgetConfig.attributeNames.forEach((name, idx) => {
+                    attributeColors.push([{ id: asset.id, name: name }, OrAttributeBarChart.DEFAULT_COLORS[idx % OrAttributeBarChart.DEFAULT_COLORS.length] || "#000000"]);
+                });
+            }
 
-                return html`
+            let attributeSettings: BarChartAttributeConfig = this.widgetConfig?.attributeSettings ? structuredClone(this.widgetConfig.attributeSettings) : {};
+            if (!attributeSettings.methodAvgAttributes) attributeSettings.methodAvgAttributes = [];
+            attributeColors.forEach(c => {
+                attributeSettings.methodAvgAttributes!.push(c[0]);
+            });
+
+            return html`
                     <or-attribute-barchart .assets="${this.loadedAssets}" .assetAttributes="${this.assetAttributes}"
                                            .attributeColors="${attributeColors}" .attributeConfig="${attributeSettings}"
                                            ?showLegend=${this.widgetConfig?.showLegend} ?stacked=${this.widgetConfig?.stacked}
@@ -246,7 +250,7 @@ export class AssetSpecificBarChartWidget extends OrAssetWidget {
                                            style="height: 100%"
                     ></or-attribute-barchart>
                 `;
-            }))}
+        }))}
         `;
     }
 
