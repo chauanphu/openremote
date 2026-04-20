@@ -1,35 +1,24 @@
-import {css, html, PropertyValues, TemplateResult} from "lit";
-import {customElement, query, state} from "lit/decorators.js";
-import {OrAssetWidget} from "../util/or-asset-widget";
-import {OrWidget, WidgetManifest} from "../util/or-widget";
-import {WidgetSettings} from "../util/widget-settings";
-import {AssetWidgetConfig} from "../util/widget-config";
-import {Asset} from "@openremote/model";
-import {LngLatLike, Util as MapUtil, OrMap, AssetWithLocation, OrMapMarkersChangedEvent, OrMapLoadedEvent, OrMapMarkerEventDetail} from "@openremote/or-map";
-import {map} from "lit/directives/map.js";
+import { css, html, PropertyValues, TemplateResult } from "lit";
+import { customElement, state } from "lit/decorators.js";
+import { OrAssetWidget } from "../util/or-asset-widget";
+import { OrWidget, WidgetManifest } from "../util/or-widget";
+import { WidgetSettings } from "../util/widget-settings";
+import { AssetWidgetConfig } from "../util/widget-config";
+import { Asset } from "@openremote/model";
 import { when } from "lit/directives/when.js";
-import {StreetlightSettings} from "../settings/streetlight-settings";
-import "@openremote/or-map";
+import { StreetlightSettings } from "../settings/streetlight-settings";
 import "@openremote/or-attribute-input";
 
 export interface StreetlightWidgetConfig extends AssetWidgetConfig {
-    assetType?: string
-    allOfType?: boolean,
-    assetIds: string[]
-    attributeNames: string[]
-    zoom?: number,
-    center?: LngLatLike,
-    showGeoJson: boolean,
+    assetType?: string;
+    attributeNames: string[];
 }
 
 function getDefaultConfig(): StreetlightWidgetConfig {
     return {
         attributeRefs: [],
         assetType: undefined,
-        allOfType: true,
-        assetIds: [],
-        attributeNames: [],
-        showGeoJson: true
+        attributeNames: []
     } as StreetlightWidgetConfig;
 }
 
@@ -59,6 +48,7 @@ const styling = css`
         align-items: center;
         justify-content: center;
         flex: 1;
+        text-align: center;
         color: var(--mdc-theme-text-secondary-on-background, rgba(0,0,0,0.54));
         font-style: italic;
     }
@@ -70,17 +60,14 @@ export class StreetlightWidget extends OrAssetWidget {
     protected widgetConfig!: StreetlightWidgetConfig;
 
     @state()
-    protected _assetsOnScreen: AssetWithLocation[] = [];
+    protected _activeAssetId?: string;
 
     @state()
-    protected _focusedAssetId?: string;
-
-    @query("or-map")
-    protected _map?: OrMap;
+    protected _loading = false;
 
     static getManifest(): WidgetManifest {
         return {
-            displayName: "Control Panel",
+            displayName: "Bảng điều khiển",
             displayIcon: "lightbulb-outline",
             minColumnWidth: 2,
             minColumnHeight: 3,
@@ -101,114 +88,90 @@ export class StreetlightWidget extends OrAssetWidget {
     }
 
     connectedCallback() {
-        this.addEventListener(OrMapLoadedEvent.NAME, this._onMapLoaded);
-        this.addEventListener(OrMapMarkersChangedEvent.NAME, this._onMapMarkersChanged);
-        return super.connectedCallback();
+        super.connectedCallback();
+        window.addEventListener('or-dash-asset-selected', this._handleAssetSelected as EventListener);
     }
 
     disconnectedCallback() {
-        this.removeEventListener(OrMapLoadedEvent.NAME, this._onMapLoaded);
-        this.removeEventListener(OrMapMarkersChangedEvent.NAME, this._onMapMarkersChanged);
-        return super.disconnectedCallback();
+        super.disconnectedCallback();
+        window.removeEventListener('or-dash-asset-selected', this._handleAssetSelected as EventListener);
+    }
+
+    protected _handleAssetSelected = (e: CustomEvent<{ assetId: string }>) => {
+        if (e.detail && e.detail.assetId) {
+            this._activeAssetId = e.detail.assetId;
+            this._loadActiveAsset();
+        }
     }
 
     refreshContent(force: boolean): void {
-        this._loadAssets();
+        this._loadActiveAsset();
     }
 
     protected updated(changedProps: PropertyValues) {
-        if(changedProps.has('widgetConfig') && this.widgetConfig) {
-            this._loadAssets();
-        }
-        if(changedProps.has("loadedAssets") && this.loadedAssets) {
-            // refresh map or focused state if necessary
-            if (this._focusedAssetId && !this.loadedAssets.find(a => a.id === this._focusedAssetId)) {
-                this._focusedAssetId = undefined;
-            }
+        if (changedProps.has('widgetConfig') && this.widgetConfig) {
+            this._loadActiveAsset();
         }
         super.updated(changedProps);
     }
 
-    protected _loadAssets() {
-        if(!this.widgetConfig.assetType) {
+    protected _loadActiveAsset() {
+        if (!this._activeAssetId || !this.widgetConfig.assetType) {
+            this.loadedAssets = [];
             return;
         }
 
-        if (this.widgetConfig.allOfType) {
-            this.queryAssets({
-                types: [this.widgetConfig.assetType!],
-                select: {
-                    attributes: [...this.widgetConfig.attributeNames, "location"]
-                }
-            }).then((assets) => {
+        this._loading = true;
+        this.queryAssets({
+            ids: [this._activeAssetId],
+            select: {
+                attributes: this.widgetConfig.attributeNames
+            }
+        }).then((assets) => {
+            // Check if returned asset matches the configured assetType
+            if (assets.length > 0 && assets[0].type === this.widgetConfig.assetType) {
                 this.loadedAssets = assets;
-            });
-        } else if (this.widgetConfig.assetIds.length > 0) {
-            this.queryAssets({
-                ids: this.widgetConfig.assetIds,
-                select: {
-                    attributes: [...this.widgetConfig.attributeNames, "location"]
-                }
-            }).then((assets) => {
-                this.loadedAssets = assets;
-            });
-        }
-    }
-
-    protected handleMarkerClick(e: CustomEvent<OrMapMarkerEventDetail>, asset: AssetWithLocation) {
-        this._focusedAssetId = asset.id;
-        window.dispatchEvent(new CustomEvent('or-dash-asset-selected', { detail: { assetId: asset.id } }));
+            } else {
+                this.loadedAssets = [];
+            }
+        }).finally(() => {
+            this._loading = false;
+        });
     }
 
     protected render(): TemplateResult {
-        const focusedAsset = this._focusedAssetId ? this.loadedAssets.find(a => a.id === this._focusedAssetId) : undefined;
+        const focusedAsset = this.loadedAssets.length > 0 ? this.loadedAssets[0] : undefined;
 
-        // the map takes up half or flexible size, control panel takes the rest
         return html`
             <div id="widget-wrapper">
-                <or-map id="miniMap" class="or-map" .zoom="${this.widgetConfig.zoom}" .center="${this.widgetConfig.center}" .showGeoJson="${this.widgetConfig.showGeoJson}" style="flex: 1; min-height: 50%;">
-                    ${map(this._assetsOnScreen, (asset) => html`
-                        <or-map-marker-asset 
-                            .asset="${asset}" 
-                            @or-map-marker-clicked="${(e: CustomEvent<OrMapMarkerEventDetail>) => this.handleMarkerClick(e, asset)}"
-                        ></or-map-marker-asset>
-                    `)}
-                </or-map>
                 <div id="control-panel-wrapper">
-                    ${focusedAsset ? html`
-                        <div class="panel-header">${focusedAsset.name || focusedAsset.id}</div>
-                        ${this.widgetConfig.attributeNames.map(attrName => {
-                            const attribute = focusedAsset.attributes ? focusedAsset.attributes[attrName] : undefined;
-                            if (!attribute) return html``;
-                            return html`
-                                <or-attribute-input class="attr-input" fullWidth
-                                    .assetType="${focusedAsset.type}"
-                                    .attribute="${attribute}"
-                                    .assetId="${focusedAsset.id}"
-                                    .disabled="${false}"
-                                    .readonly="${false}"
-                                    .hasHelperText="${true}">
-                                </or-attribute-input>
-                            `;
-                        })}
-                    ` : html`
-                        <div class="empty-state">
-                            Select an asset on the map to view and control its properties.
-                        </div>
-                    `}
+                    ${when(this._loading, () => html`<or-loading-indicator></or-loading-indicator>`, () =>
+            focusedAsset ? html`
+                            <div class="panel-header">${focusedAsset.name || focusedAsset.id}</div>
+                            ${this.widgetConfig.attributeNames.map(attrName => {
+                const attribute = focusedAsset.attributes ? focusedAsset.attributes[attrName] : undefined;
+                if (!attribute) return html``;
+                const isReadOnly = attribute.meta?.readOnly === true || attribute.meta?.readOnly === "true";
+                return html`
+                                    <or-attribute-input class="attr-input" fullWidth
+                                        .assetType="${focusedAsset.type}"
+                                        .attribute="${attribute}"
+                                        .assetId="${focusedAsset.id}"
+                                        .disabled="${isReadOnly || undefined}"
+                                        .readonly="${isReadOnly || undefined}"
+                                        .disableButton="${isReadOnly || undefined}"
+                                        .hasHelperText="${true}">
+                                    </or-attribute-input>
+                                `;
+            })}
+                        ` : html`
+                            <div class="empty-state">
+                                Select an asset on the map or another widget to view and control its properties.
+                            </div>
+                        `
+        )}
                 </div>
             </div>
         `;
     }
-
-    protected _onMapLoaded = (e: OrMapLoadedEvent) => {
-        const assetType = this.widgetConfig.allOfType ? undefined : this.widgetConfig.assetType;
-        const assets = this.loadedAssets.filter(asset => !assetType || asset.type === assetType).filter(MapUtil.isAssetWithLocation);
-        this._map?.addAssets(assets);
-    }
-
-    protected _onMapMarkersChanged = (e: OrMapMarkersChangedEvent) => {
-        this._assetsOnScreen = e.detail;
-    }
-
 }
