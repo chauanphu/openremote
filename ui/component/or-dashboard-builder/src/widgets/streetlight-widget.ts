@@ -157,6 +157,7 @@ export class StreetlightWidget extends OrAssetWidget {
 
     protected handleMarkerClick(e: CustomEvent<OrMapMarkerEventDetail>, asset: AssetWithLocation) {
         this._focusedAssetId = asset.id;
+        window.dispatchEvent(new CustomEvent('or-dash-asset-selected', { detail: { assetId: asset.id } }));
     }
 
     protected render(): TemplateResult {

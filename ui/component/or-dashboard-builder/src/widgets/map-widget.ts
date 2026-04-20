@@ -6,7 +6,7 @@ import {WidgetSettings} from "../util/widget-settings";
 import {MapSettings} from "../settings/map-settings";
 import {AssetWidgetConfig} from "../util/widget-config";
 import {Asset, AssetDescriptor} from "@openremote/model";
-import {LngLatLike, MapMarkerColours, MapMarkerAssetConfig, Util as MapUtil, OrMap, AssetWithLocation, OrMapMarkersChangedEvent, MapMarkerConfig, OrMapLoadedEvent} from "@openremote/or-map";
+import {LngLatLike, MapMarkerColours, MapMarkerAssetConfig, Util as MapUtil, OrMap, AssetWithLocation, OrMapMarkersChangedEvent, MapMarkerConfig, OrMapLoadedEvent, OrMapMarkerEventDetail} from "@openremote/or-map";
 import {map} from "lit/directives/map.js";
 import manager from "@openremote/core";
 import { showSnackbar } from "@openremote/or-mwc-components/or-mwc-snackbar";
@@ -148,7 +148,11 @@ export class MapWidget extends OrAssetWidget {
             <div style="height: 100%; display: flex; flex-direction: column; overflow: hidden;">
                 <or-map id="miniMap" class="or-map" .zoom="${this.widgetConfig.zoom}" .center="${this.widgetConfig.center}" .showGeoJson="${this.widgetConfig.showGeoJson}" style="flex: 1;">
                     ${map(this._assetsOnScreen, (asset) => html`
-                        <or-map-marker-asset .asset="${asset}" .config="${this.markers}"></or-map-marker-asset>
+                        <or-map-marker-asset 
+                            .asset="${asset}" 
+                            .config="${this.markers}"
+                            @or-map-marker-clicked="${(e: CustomEvent<OrMapMarkerEventDetail>) => this.handleMarkerClick(e, asset)}"
+                        ></or-map-marker-asset>
                     `)}
                 </or-map>
             </div>
@@ -163,6 +167,10 @@ export class MapWidget extends OrAssetWidget {
 
     protected _onMapMarkersChanged(e: OrMapMarkersChangedEvent) {
         this._assetsOnScreen = e.detail;
+    }
+
+    protected handleMarkerClick(e: CustomEvent<OrMapMarkerEventDetail>, asset: AssetWithLocation) {
+        window.dispatchEvent(new CustomEvent('or-dash-asset-selected', { detail: { assetId: asset.id } }));
     }
 
     protected _loadMarkers(): void {
