@@ -504,8 +504,8 @@ services:
     image: maptiler/tileserver-gl:latest
     restart: always
     volumes:
-      # Use deployment-data, which contains the /map directory
-      # - deployment-data:/data:ro
+      - ${DEPLOYMENT_DIRECTORY:-../deployment}:/deployment
+      - ${DEPLOYMENT_DIRECTORY:-../deployment}/map:/data/map
     command: ["--mbtiles", "/data/map/mapdata.mbtiles"]
 
   sish:
