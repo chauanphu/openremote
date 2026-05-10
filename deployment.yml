@@ -147,4 +147,5 @@ services:
       OR_MAP_TILESERVER_HOST: map
       OR_MAP_TILESERVER_PORT: 8080
       OR_MAP_TILES_PATH: /deployment/map/mapdata.mbtiles
+      DEFAULT_REALM_KEYCLOAK_THEME: toanthan
     # <<: *awslogs

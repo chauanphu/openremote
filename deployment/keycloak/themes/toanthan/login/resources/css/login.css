@@ -1,0 +1,397 @@
+/* ============================================================
+   Toàn Thắng – Keycloak Login Theme
+   ============================================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Manrope', sans-serif;
+}
+
+body {
+  background: linear-gradient(160deg, #0A1F3D 0%, #102F66 100%);
+  min-height: 100vh;
+  color: #fff;
+}
+
+/* ── Layout ─────────────────────────────────────────────── */
+
+.page-wrapper {
+  display: flex;
+  min-height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Left decorative hero */
+.hero-panel {
+  flex: 1 1 55%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 280px;
+}
+
+/* Right card panel */
+.card-panel {
+  flex: 0 0 auto;
+  width: 440px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 32px;
+  position: relative;
+  z-index: 10;
+}
+
+/* ── Decorative SVGs ─────────────────────────────────────── */
+
+.deco {
+  position: absolute;
+  pointer-events: none;
+}
+
+.deco-radar {
+  width: 700px;
+  height: 700px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.9;
+}
+
+.deco-spotlight-left {
+  width: 320px;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0.8;
+}
+
+.deco-spotlight-right {
+  width: 320px;
+  height: 100%;
+  top: 0;
+  right: 0;
+  opacity: 0.8;
+}
+
+.deco-grid {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 1;
+}
+
+.deco-dish {
+  width: 200px;
+  height: 200px;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-30%);
+}
+
+.deco-stars {
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* ── Hero branding ───────────────────────────────────────── */
+
+.hero-brand {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  text-align: center;
+  padding: 0 32px;
+}
+
+.brand-logo-mark svg {
+  width: 64px;
+  height: 64px;
+  filter: drop-shadow(0 0 18px rgba(100,160,255,0.5));
+}
+
+.brand-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #fff;
+  text-shadow: 0 0 40px rgba(100,160,255,0.4);
+}
+
+.brand-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  color: rgba(255,255,255,0.45);
+  text-transform: uppercase;
+}
+
+/* ── Login card ──────────────────────────────────────────── */
+
+.login-card {
+  width: 100%;
+  max-width: 380px;
+  background: #fff;
+  border-radius: 18px;
+  padding: 44px 40px 36px;
+  box-shadow:
+    0 24px 80px rgba(0,0,0,0.35),
+    0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+/* Card header */
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.card-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.18em;
+  color: #1E5FBF;
+  text-transform: uppercase;
+}
+
+.card-title {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: #0A1F3D;
+  line-height: 1.2;
+}
+
+/* ── Alert messages ──────────────────────────────────────── */
+
+.alert {
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+.alert-error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+.alert-warning {
+  background: #FEF3C7;
+  color: #92400E;
+  border: 1px solid #FDE68A;
+}
+
+.alert-success {
+  background: #D1FAE5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.alert-info {
+  background: #DBEAFE;
+  color: #1E40AF;
+  border: 1px solid #BFDBFE;
+}
+
+/* ── Form ────────────────────────────────────────────────── */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.03em;
+}
+
+.form-input {
+  width: 100%;
+  height: 46px;
+  padding: 0 14px;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.92rem;
+  color: #111827;
+  background: #F9FAFB;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+.form-input::placeholder {
+  color: #9CA3AF;
+}
+
+.form-input:focus {
+  border-color: #1E5FBF;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(30,95,191,0.12);
+}
+
+/* ── Submit button ───────────────────────────────────────── */
+
+.btn-login {
+  margin-top: 6px;
+  width: 100%;
+  height: 50px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #1E5FBF 0%, #0D2B5C 100%);
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 0 4px 18px rgba(13,43,92,0.35);
+}
+
+.btn-login:hover {
+  opacity: 0.9;
+}
+
+.btn-login:active {
+  transform: scale(0.98);
+}
+
+/* ── Status bar ──────────────────────────────────────────── */
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 4px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.status-node {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: #9CA3AF;
+  text-transform: uppercase;
+}
+
+.status-online {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.14em;
+  color: #16A34A;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22C55E;
+  box-shadow: 0 0 6px rgba(34,197,94,0.6);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 6px rgba(34,197,94,0.6); }
+  50%       { opacity: 0.7; box-shadow: 0 0 12px rgba(34,197,94,0.9); }
+}
+
+/* ============================================================
+   Responsive – tablet / mobile
+   ============================================================ */
+
+@media (max-width: 900px) {
+  .page-wrapper {
+    flex-direction: column;
+  }
+
+  .hero-panel {
+    flex: 0 0 auto;
+    min-height: 220px;
+    padding: 40px 24px 28px;
+  }
+
+  .hero-brand {
+    gap: 14px;
+  }
+
+  .brand-name {
+    font-size: 1.4rem;
+  }
+
+  .deco-radar {
+    width: 420px;
+    height: 420px;
+  }
+
+  .card-panel {
+    width: 100%;
+    padding: 24px 20px 40px;
+  }
+
+  .login-card {
+    max-width: 420px;
+    padding: 36px 28px 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-panel {
+    min-height: 180px;
+  }
+
+  .brand-name {
+    font-size: 1.15rem;
+  }
+
+  .brand-logo-mark svg {
+    width: 48px;
+    height: 48px;
+  }
+
+  .login-card {
+    padding: 28px 20px 24px;
+    border-radius: 14px;
+    gap: 22px;
+  }
+
+  .card-title {
+    font-size: 1.3rem;
+  }
+
+  .btn-login {
+    height: 48px;
+    font-size: 0.9rem;
+  }
+}
