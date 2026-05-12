@@ -5,11 +5,12 @@ import org.openremote.model.asset.AssetDescriptor;
 import org.openremote.model.attribute.MetaItem;
 import org.openremote.model.value.AttributeDescriptor;
 import org.openremote.model.value.MetaItemType;
+import org.openremote.model.value.ValueConstraint;
 import org.openremote.model.value.ValueFormat;
+import org.openremote.model.value.ValueFormat.StyleRepresentation;
 import org.openremote.model.value.ValueType;
 
 import jakarta.persistence.Entity;
-import java.util.Date;
 import java.util.Optional;
 
 import static org.openremote.model.Constants.UNITS_VOLT;
@@ -47,10 +48,19 @@ public class StreetLightAsset extends Asset<ThingAsset> {
             new MetaItem<>(MetaItemType.READ_ONLY)).withUnits(UNITS_KILO, UNITS_WATT, UNITS_HOUR); // kWh is
                                                                                                    // somewhat
                                                                                                    // standard
-    public static final AttributeDescriptor<Date> ON_TIME = new AttributeDescriptor<>("onTime",
-            ValueType.DATE_AND_TIME);
-    public static final AttributeDescriptor<Date> OFF_TIME = new AttributeDescriptor<>("offTime",
-            ValueType.DATE_AND_TIME);
+    // Time-of-day in 24h "HH:mm". Stored as a daily recurring schedule, no date component.
+    public static final AttributeDescriptor<String> ON_TIME = new AttributeDescriptor<>("onTime",
+            ValueType.TEXT,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE))
+            .withConstraints(new ValueConstraint.Pattern("^([01]\\d|2[0-3]):[0-5]\\d$"))
+            .withFormat(new ValueFormat().setTimeStyle(StyleRepresentation.SHORT).setMomentJsFormat("HH:mm"));
+    public static final AttributeDescriptor<String> OFF_TIME = new AttributeDescriptor<>("offTime",
+            ValueType.TEXT,
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_READ),
+            new MetaItem<>(MetaItemType.ACCESS_RESTRICTED_WRITE))
+            .withConstraints(new ValueConstraint.Pattern("^([01]\\d|2[0-3]):[0-5]\\d$"))
+            .withFormat(new ValueFormat().setTimeStyle(StyleRepresentation.SHORT).setMomentJsFormat("HH:mm"));
 
     public static final AssetDescriptor<StreetLightAsset> DESCRIPTOR = new AssetDescriptor<>("post-lamp", "e6688a",
             StreetLightAsset.class);
@@ -119,20 +129,20 @@ public class StreetLightAsset extends Asset<ThingAsset> {
         return this;
     }
 
-    public Optional<Date> getOnTime() {
+    public Optional<String> getOnTime() {
         return getAttributes().getValue(ON_TIME);
     }
 
-    public StreetLightAsset setOnTime(Date value) {
+    public StreetLightAsset setOnTime(String value) {
         getAttributes().getOrCreate(ON_TIME).setValue(value);
         return this;
     }
 
-    public Optional<Date> getOffTime() {
+    public Optional<String> getOffTime() {
         return getAttributes().getValue(OFF_TIME);
     }
 
-    public StreetLightAsset setOffTime(Date value) {
+    public StreetLightAsset setOffTime(String value) {
         getAttributes().getOrCreate(OFF_TIME).setValue(value);
         return this;
     }

@@ -383,6 +383,14 @@ export const getValueHolderInputTemplateProvider: ValueInputProviderGenerator = 
                 inputType = InputType.DATE;
             }
         }
+    } else if (inputType === InputType.TEXT && format) {
+        // Allow plain text values to opt into time/date pickers via ValueFormat
+        // (e.g. an "HH:mm" string field that should render as a native time input).
+        if (format.timeStyle && !format.dateStyle) {
+            inputType = InputType.TIME;
+        } else if (format.dateStyle && !format.timeStyle) {
+            inputType = InputType.DATE;
+        }
     }
 
     if (inputType === InputType.NUMBER && format && format.resolution) {
