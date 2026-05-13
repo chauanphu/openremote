@@ -10,17 +10,26 @@
 #
 # Please see openremote/profile/deploy.yml for configuration details for each service.
 #
+# Optional Eclipse hawkBit (OTA) environment variables — see docs/OTA.md:
+#    HAWKBIT_VERSION          - hawkBit container tag (default: 0.6.1-mysql)
+#                               MUST be a "-mysql" tag when using MariaDB —
+#                               the plain tags only contain the H2 driver.
+#    HAWKBIT_USERNAME         - hawkBit admin user (default: admin)
+#    HAWKBIT_PASSWORD         - hawkBit admin password (default: admin — CHANGE IN PROD)
+#    HAWKBIT_DB_ROOT_PASSWORD - MariaDB root password
+#    HAWKBIT_DB_PASSWORD      - MariaDB hawkbit user password
+#
 # To perform updates, build code and prepare Docker images:
 #
 #   ./gradlew clean installDist
 #
 # Then recreate deployment image:
 #
-#  DEPLOYMENT_VERSION=$(git rev-parse --short HEAD)
+#  DEPLOYMENT_VERSION=$(git rev-parse --short HEAD;)
 #  MANAGER_VERSION=$(git rev-parse --short HEAD;)
 #  cd ui/app/manager && yarn build
-#  docker build -t openremote/manager:$MANAGER_VERSION ./manager/build/install/manager/
-#  docker build -t openremote/scada-deployment:$DEPLOYMENT_VERSION ./deployment/build/
+#  docker build -t chauaphu/scada-manager:$MANAGER_VERSION ./manager/build/install/manager/
+#  docker build -t chauaphu/scada-deployment:$DEPLOYMENT_VERSION ./deployment/build/
 #  docker compose -p custom down
 #  docker volume rm custom_deployment-data
 #  Do the following volume rm command if you want a clean install (wipe all existing data)
@@ -34,6 +43,8 @@ volumes:
   deployment-data:
   postgresql-data:
   manager-data:
+  hawkbit-mariadb-data:
+  hawkbit-artifact-data:
 
     # Add an NFS volume to the stack
     #  efs-data:
@@ -148,4 +159,90 @@ services:
       OR_MAP_TILESERVER_PORT: 8080
       OR_MAP_TILES_PATH: /deployment/map/mapdata.mbtiles
       DEFAULT_REALM_KEYCLOAK_THEME: toanthan
+      # hawkBit integration (internal docker network)
+      HAWKBIT_URL: http://hawkbit:8080
+      HAWKBIT_USERNAME: ${HAWKBIT_USERNAME:-admin}
+      HAWKBIT_PASSWORD: ${HAWKBIT_PASSWORD:-admin}
+    # <<: *awslogs
+
+  # Eclipse hawkBit - OTA / firmware update server
+  # Internal-only: no host port published. Reach it from the manager container
+  # at http://hawkbit:8080 or tunnel for UI access (see docs/OTA.md).
+  hawkbit-mariadb:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      MARIADB_ROOT_PASSWORD: ${HAWKBIT_DB_ROOT_PASSWORD:-changeme}
+      MARIADB_DATABASE: hawkbit
+      MARIADB_USER: hawkbit
+      MARIADB_PASSWORD: ${HAWKBIT_DB_PASSWORD:-hawkbit}
+    volumes:
+      - hawkbit-mariadb-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  hawkbit:
+    # Use the "-mysql" image variant — it bundles the MariaDB JDBC driver.
+    # The plain tag only ships with H2 and will fail to load org.mariadb.jdbc.Driver.
+    image: hawkbit/hawkbit-update-server:${HAWKBIT_VERSION:-latest}
+    restart: always
+    depends_on:
+      hawkbit-mariadb:
+        condition: service_healthy
+    volumes:
+      - hawkbit-artifact-data:/artifactrepo
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mariadb://hawkbit-mariadb:3306/hawkbit
+      SPRING_DATASOURCE_USERNAME: hawkbit
+      SPRING_DATASOURCE_PASSWORD: ${HAWKBIT_DB_PASSWORD:-hawkbit}
+      # hawkBit uses EclipseLink (NOT Hibernate) — must be an
+      # org.eclipse.persistence.platform.database.*Platform class.
+      # MariaDB speaks the MySQL wire protocol, so MySQLPlatform is correct.
+      SPRING_JPA_DATABASE_PLATFORM: org.eclipse.persistence.platform.database.MySQLPlatform
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.mariadb.jdbc.Driver
+
+      # ----- Disable DMF/RabbitMQ (single-node, DDI-only) -------------------
+      # DDI alone is enough for ESP32/MCU OTA. Enable DMF + add a rabbitmq
+      # service only if you want server-to-server messaging.
+      HAWKBIT_DMF_RABBITMQ_ENABLED: "false"
+      SPRING_RABBITMQ_LISTENER_SIMPLE_AUTO_STARTUP: "false"
+      SPRING_AUTOCONFIGURE_EXCLUDE: org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration
+ 
+      # ----- Artifact storage on a mounted volume ---------------------------
+      ORG_ECLIPSE_HAWKBIT_REPOSITORY_FILE_PATH: /artifactrepo
+ 
+      # ----- Device authentication ------------------------------------------
+      # Target token: each Hawkbit "target" (= one device) gets its own token.
+      # Gateway token: one shared token, useful when many devices report
+      #   through a gateway or you bootstrap them with a common secret.
+      HAWKBIT_SERVER_DDI_SECURITY_AUTHENTICATION_TARGETTOKEN_ENABLED: "true"
+      HAWKBIT_SERVER_DDI_SECURITY_AUTHENTICATION_GATEWAYTOKEN_ENABLED: "true"
+      HAWKBIT_SERVER_DDI_SECURITY_AUTHENTICATION_GATEWAYTOKEN_KEY: ${HAWKBIT_GATEWAY_TOKEN:?HAWKBIT_GATEWAY_TOKEN must be set}
+ 
+    # ----- HTTP downloads for constrained devices (ESP32, nRF, etc.) ------
+      # Tell Hawkbit which URL to embed in deploymentBase responses so the
+      # device can fetch the artifact. Use http:// for plain MCUs, https://
+      # behind a reverse proxy in production.
+      HAWKBIT_ARTIFACT_URL_PROTOCOLS_DOWNLOAD_HTTP_ENABLED: "true"
+      HAWKBIT_ARTIFACT_URL_PROTOCOLS_DOWNLOAD_HTTP_PORT: "8080"
+      HAWKBIT_ARTIFACT_URL_PROTOCOLS_DOWNLOAD_HTTP_HOSTNAME: ${OR_HOSTNAME:-localhost}
+      HAWKBIT_ARTIFACT_URL_PROTOCOLS_DOWNLOAD_HTTP_REF: '{protocol}://{hostnameRequest}:${HAWKBIT_HTTP_PORT:-8090}/{tenant}/controller/v1/{controllerId}/softwaremodules/{softwareModuleId}/artifacts/{artifactFileName}'
+ 
+      # ----- Admin UI bootstrap user ----------------------------------------
+      # IMPORTANT: do NOT use SPRING_SECURITY_USER_* — that creates a plain
+      # Spring user with no tenant attached, and every Management API call
+      # fails with "IllegalStateException: Tenant not set".
+      # The HAWKBIT_SECURITY_USER_* properties create a tenant-aware user
+      # bound to the DEFAULT tenant.
+      HAWKBIT_SECURITY_USER_ADMIN_USERNAME: ${HAWKBIT_ADMIN_USER:-admin}
+      HAWKBIT_SECURITY_USER_ADMIN_PASSWORD: ${HAWKBIT_ADMIN_PASSWORD:-admin}
+      HAWKBIT_SECURITY_USER_ADMIN_FIRSTNAME: hawkBit
+      HAWKBIT_SECURITY_USER_ADMIN_LASTNAME: Admin
+      HAWKBIT_SECURITY_USER_ADMIN_TENANT: DEFAULT
+      HAWKBIT_SECURITY_USER_ADMIN_PERMISSIONS: ALL
+    ports:
+      - "${HAWKBIT_HTTP_PORT:-8090}:8080"
     # <<: *awslogs

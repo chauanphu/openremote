@@ -69,3 +69,5 @@ component-test-report
 
 # Map data
 deployment/map/*.mbtiles
+
+*.env
